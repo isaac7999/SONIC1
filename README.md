@@ -1,74 +1,152 @@
--- Importando a biblioteca GUI (substitua pela biblioteca específica do Delta GUI se necessário)
-local gui = require("gui") -- Certifique-se de usar uma biblioteca GUI apropriada para Lua
+-- Criando o painel principal
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local MinimizeButton = Instance.new("TextButton")
+local TitleLabel = Instance.new("TextLabel")
+local EspLineButton = Instance.new("TextButton")
+local AntiLagButton = Instance.new("TextButton")
+local EspNickButton = Instance.new("TextButton")
+local AutoCLButton = Instance.new("TextButton")
+local HitboxButton = Instance.new("TextButton")
 
--- Cria a janela principal para dispositivos móveis
-local window = gui.createWindow("SONIC", 400, 300)
+-- Configuração do painel principal
+ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+MainFrame.Size = UDim2.new(0, 300, 0, 300)
+MainFrame.Position = UDim2.new(0.5, -150, 0.5, -150)
+MainFrame.BackgroundColor3 = Color3.fromRGB(173, 216, 230) -- Azul Claro
+MainFrame.Parent = ScreenGui
 
--- Define a posição da janela no centro da tela
-window:setPosition(display.contentCenterX - window.width / 2, display.contentCenterY - window.height / 2)
+-- Título do painel
+TitleLabel.Size = UDim2.new(1, 0, 0, 30)
+TitleLabel.Position = UDim2.new(0, 0, 0, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "SONIC GRÁTIS"
+TitleLabel.TextSize = 20
+TitleLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+TitleLabel.Parent = MainFrame
 
--- Cria o botão de minimizar em forma de quadrado
-local minimizeButton = gui.createButton("▢", 370, 10, 20, 20)
+-- Botão de minimizar
+MinimizeButton.Size = UDim2.new(0, 50, 0, 25)
+MinimizeButton.Position = UDim2.new(1, -55, 0, 5)
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+MinimizeButton.Text = "_"
+MinimizeButton.Parent = MainFrame
+MinimizeButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
 
--- Função para minimizar a janela
-minimizeButton.onClick = function()
-    window:setVisible(false)
+-- Função para alternar cor do botão
+toggleButton = function(button, state)
+    if state then
+        button.BackgroundColor3 = Color3.fromRGB(0, 255, 0) -- Verde
+    else
+        button.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Vermelho
+    end
 end
 
--- Adiciona o botão de minimizar à janela
-window:addComponent(minimizeButton)
+-- Criando os botões e funcionalidades
+toggleFunctions = {}
 
--- Cria o rótulo com a descrição e o link para o Discord
-local discordLabel = gui.createLabel("Entre no nosso Discord: https://discord.gg/HsQUdUna", 10, 250, 380, 20)
-window:addComponent(discordLabel)
-
--- Cria o botão "Passa sensi"
-local sensiButton = gui.createButton("Passa sensi", display.contentCenterX - 50, display.contentCenterY - 20, 100, 40)
-
--- Função para exibir o campo numérico quando o botão é pressionado
-sensiButton.onClick = function()
-    numberField:setVisible(true)
+local function createButton(name, pos, callback)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0, 100, 0, 25)
+    button.Position = UDim2.new(0, 10, 0, pos)
+    button.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Vermelho por padrão
+    button.Text = name
+    button.Parent = MainFrame
+    local state = false
+    button.MouseButton1Click:Connect(function()
+        state = not state
+        toggleButton(button, state)
+        callback(state)
+    end)
+    return button
 end
-window:addComponent(sensiButton)
 
--- Cria o campo numérico
-local numberField = gui.createNumericField({
-    value = 5,
-    min = 0,
-    max = 10,
-    x = display.contentCenterX - 50,
-    y = display.contentCenterY + 40,
-    width = 100,
-    height = 40,
-    onChange = function(value)
-        if value > 5 then
-            -- Aumenta a lentidão da tela
-            setGameSpeed("slow")
-        else
-            -- Deixa a tela mais fluida
-            setGameSpeed("fast")
+-- ESP Line
+toggleFunctions["ESP Line"] = function(state)
+    if state then
+        for _, player in pairs(game.Players:GetPlayers()) do
+            if player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                local attachment1 = Instance.new("Attachment", player.Character.HumanoidRootPart)
+                local attachment2 = Instance.new("Attachment", game.Players.LocalPlayer.Character.HumanoidRootPart)
+                local beam = Instance.new("Beam")
+                beam.Attachment0 = attachment1
+                beam.Attachment1 = attachment2
+                beam.Parent = player.Character
+                beam.Color = ColorSequence.new(Color3.fromRGB(255, 0, 0))
+            end
+        end
+    else
+        for _, player in pairs(game.Players:GetPlayers()) do
+            if player.Character then
+                for _, obj in pairs(player.Character:GetChildren()) do
+                    if obj:IsA("Beam") then obj:Destroy() end
+                end
+            end
         end
     end
-})
-numberField:setVisible(false) -- Inicialmente invisível
-window:addComponent(numberField)
+end
+EspLineButton = createButton("ESP Line", 40, toggleFunctions["ESP Line"])
 
--- Função para configurar a velocidade do jogo
-function setGameSpeed(speed)
-    if speed == "slow" then
-        -- Ajuste o código aqui para aumentar a lentidão do jogo
-    elseif speed == "fast" then
-        -- Ajuste o código aqui para deixar a tela mais fluida
+-- Anti Lag
+toggleFunctions["Anti Lag"] = function(state)
+    if state then
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj:IsA("Part") or obj:IsA("MeshPart") then
+                obj.Material = Enum.Material.SmoothPlastic
+                obj.Reflectance = 0
+            end
+        end
     end
 end
+AntiLagButton = createButton("Anti Lag", 100, toggleFunctions["Anti Lag"])
 
--- Mostra a janela
-window:show()
-
--- Função principal para configurar a interface gráfica
-local function setupGUI()
-    window:show()
+-- ESP Nick
+toggleFunctions["ESP Nick"] = function(state)
+    if state then
+        for _, player in pairs(game.Players:GetPlayers()) do
+            if player.Character and not player.Character:FindFirstChild("BillboardGui") then
+                local gui = Instance.new("BillboardGui", player.Character)
+                gui.Size = UDim2.new(0, 100, 0, 50)
+                gui.AlwaysOnTop = true
+                local text = Instance.new("TextLabel", gui)
+                text.Size = UDim2.new(1, 0, 1, 0)
+                text.Text = player.Name
+                text.TextColor3 = Color3.fromRGB(255, 255, 255)
+                text.BackgroundTransparency = 1
+            end
+        end
+    else
+        for _, player in pairs(game.Players:GetPlayers()) do
+            if player.Character and player.Character:FindFirstChild("BillboardGui") then
+                player.Character.BillboardGui:Destroy()
+            end
+        end
+    end
 end
+EspNickButton = createButton("ESP Nick", 130, toggleFunctions["ESP Nick"])
 
--- Inicializa a configuração da interface gráfica
-setupGUI()
+-- Auto CL
+toggleFunctions["Auto CL"] = function(state)
+    if state then
+        game:GetService("RunService").Stepped:Connect(function()
+            if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
+                if game.Players.LocalPlayer.Character.Humanoid.Health == 0 then
+                    game.Players.LocalPlayer:Kick("Removido pelo servidor.")
+                end
+            end
+        end)
+    end
+end
+AutoCLButton = createButton("Auto CL", 160, toggleFunctions["Auto CL"])
+
+-- Hitbox
+toggleFunctions["Hitbox"] = function(state)
+    for _, player in pairs(game.Players:GetPlayers()) do
+        if player.Character and player.Character:FindFirstChild("Head") then
+            player.Character.Head.Size = state and Vector3.new(5, 5, 5) or Vector3.new(1, 1, 1)
+        end
+    end
+end
+HitboxButton = createButton("Hitbox", 190, toggleFunctions["Hitbox"])
